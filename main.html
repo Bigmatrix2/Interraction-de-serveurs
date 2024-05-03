@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <title>Jeux de l'image</title>
+</head>
+
+<body>
+   <input type="file" id="img" name="img" accept="image/*">
+   <select id="effect">
+      <option value="no_effect">No effect</option>
+      <option value="zoom">Zoom</option>
+      <option value="vintage">Vintage</option>
+      <option value="shadow">Shadow</option>
+      <option value="light">Light</option>
+      <option value="smoke">Smoke</option>
+      <option value="mirror">Mirror</option>
+   </select>
+   <select id="filter">
+      <option value="no_filter">No Filter</option>
+      <option value="contrast">Contrast</option>
+      <option value="rotation">Rotation</option>
+      <option value="distortion">Distortion</option>
+      <option value="pixelation">Pixelation</option>
+      <option value="contour">Contour</option>
+      <option value="texture">Texture</option>
+   </select>
+   <button onclick="processImage()">Add effect and filter</button>
+   <button onclick="closeServers()">Retrieve image</button>
+
+   <script>
+      let gameId;
+
+      function processImage() {
+         const file = document.getElementById('img').files[0];
+         const reader = new FileReader();
+
+         reader.onload = function (event) {
+            const imgDataUrl = event.target.result;
+            sendImage(imgDataUrl);
+         };
+
+         reader.readAsDataURL(file);
+      }
+
+      function sendImage(imgDataUrl) {
+         const effectChoice = document.getElementById('effect').value;
+         const filterChoice = document.getElementById('filter').value;
+         gameId = Math.floor(Math.random() * 10000);
+
+         const xhr = new XMLHttpRequest();
+         xhr.open("POST", "http://127.0.0.1:3001/upload");
+         xhr.setRequestHeader("Content-Type", "application/json");
+         xhr.setRequestHeader("Access-Control-Allow-Origin", "http://127.0.0.1");
+         const body = JSON.stringify({
+            gameId: gameId,
+            effect: effectChoice,
+            filter: filterChoice,
+            image: imgDataUrl,
+         });
+         console.log(body);
+         xhr.onload = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+               const response = JSON.parse(xhr.responseText);
+               console.log(response.message);
+            } else {
+               console.log(`Error: ${xhr.status}`);
+            }
+         };
+         xhr.send(body);
+      }
+
+      function closeServers() {
+         const serverTreatment = new XMLHttpRequest();
+         serverTreatment.open("POST", "http://127.0.0.1:3001/closeServers");
+         serverTreatment.setRequestHeader("Content-Type", "application/json");
+         serverTreatment.setRequestHeader("Access-Control-Allow-Origin", "http://127.0.0.1");
+         serverTreatment.onload = () => {
+            if (serverTreatment.readyState == 4 && serverTreatment.status == 200) {
+               alert("Servers Diego and Elise closed successfully");
+            } else {
+               console.log(`Error: ${serverTreatment.status}`);
+            }
+         };
+         serverTreatment.send(JSON.stringify({ gameId: gameId }));
+      }
+   </script>
+</body>
+
+</html>
